@@ -497,6 +497,9 @@ export class JsonSchemaFormService {
   evaluateCondition(layoutNode: any, dataIndex: number[]): boolean {
     const arrayIndex = dataIndex && dataIndex[dataIndex.length - 1];
     let result = true;
+    if (layoutNode.options && layoutNode.options.hidden) {
+      return false;
+    }
     if (hasValue((layoutNode.options || {}).condition)) {
       if (typeof layoutNode.options.condition === 'string') {
         let pointer = layoutNode.options.condition;

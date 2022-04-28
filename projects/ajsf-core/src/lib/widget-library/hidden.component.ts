@@ -36,4 +36,9 @@ export class HiddenComponent implements OnInit {
   ngOnInit() {
     this.jsf.initializeControl(this);
   }
+
+  setDisabled() {
+    this.controlDisabled = true;
+    this.formControl.disable();
+  }
 }

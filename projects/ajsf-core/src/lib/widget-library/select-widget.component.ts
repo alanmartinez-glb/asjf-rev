@@ -39,6 +39,17 @@ export class SelectWidgetComponent implements OnChanges, OnInit {
     }
     if (this.newComponent) {
       for (const input of ['layoutNode', 'layoutIndex', 'dataIndex']) {
+        if (this.newComponent.instance && this.newComponent.instance.options && !!this.newComponent.instance.options.disabled){ // && typeof this.newComponent.instance.setDisabled !== "undefined") {
+          //this.newComponent.instance.setDisabled();
+          this.newComponent.instance.controlDisabled = !!this.newComponent.instance.options.disabled;
+          this.newComponent.instance.formControl.disable();
+        }
+        else {
+          this.newComponent.instance.controlDisabled = false;
+          if (this.newComponent.instance.formControl) {
+            this.newComponent.instance.formControl.enable();
+          }
+        }
         this.newComponent.instance[input] = this[input];
       }
     }

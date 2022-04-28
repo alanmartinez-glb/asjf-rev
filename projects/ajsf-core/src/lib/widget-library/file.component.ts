@@ -33,4 +33,9 @@ export class FileComponent implements OnInit {
   updateValue(event) {
     this.jsf.updateValue(this, event.target.value);
   }
+
+  setDisabled() {
+    this.controlDisabled = true;
+    this.formControl.disable();
+  }
 }

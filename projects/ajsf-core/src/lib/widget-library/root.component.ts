@@ -75,4 +75,10 @@ export class RootComponent {
   showWidget(layoutNode: any): boolean {
     return this.jsf.evaluateCondition(layoutNode, this.dataIndex);
   }
+
+  // Replicated but commented
+  /* setDisabled() {
+    this.controlDisabled = true;
+    this.formControl.disable();
+  } */
 }

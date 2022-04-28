@@ -71,4 +71,9 @@ export class CheckboxComponent implements OnInit {
   get isChecked() {
     return this.jsf.getFormControlValue(this) === this.trueValue;
   }
+
+  setDisabled() {
+    this.controlDisabled = true;
+    this.formControl.disable();
+  }
 }

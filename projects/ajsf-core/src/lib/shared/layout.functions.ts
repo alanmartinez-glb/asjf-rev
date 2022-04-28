@@ -25,6 +25,51 @@ import {
   } from './validator.functions';
 import { JsonPointer } from './jsonpointer.functions';
 import { TitleMapItem } from '../json-schema-form.service';
+// import { dateToString } from './date.functions';
+
+/**
+ * Simple object check.
+ * @param item
+ * @returns {boolean}
+ */
+export function isMyObject(item) {
+  return (item && typeof item === 'object' && !Array.isArray(item));
+}
+
+/**
+ * Deep merge two objects.
+ * @param target
+ * @param ...sources
+ */
+export function mergeDeep(target, ...sources) {
+  if (!sources.length) return target;
+  const source = sources.shift();
+
+  if (isMyObject(target) && isMyObject(source)) {
+    for (const key in source) {
+      if (isMyObject(source[key])) {
+        if (!target[key]) Object.assign(target, { [key]: {} });
+
+        var hasChildObject = false;
+        for (const childKey in target[key]) {
+          if (isMyObject(target[key][childKey])) hasChildObject = true;
+        }
+        if (hasChildObject) {
+          mergeDeep(target[key], source[key]);
+        }
+        else
+        {
+          target[key] = source[key];
+          //Object.assign(target, { [key]: source[key] });
+        }
+      } else {
+        Object.assign(target, { [key]: source[key] });
+      }
+    }
+  }
+
+  return mergeDeep(target, ...sources);
+}
 
 
 
@@ -502,7 +547,7 @@ export function buildLayoutFromSchema(
   dataPointer = '', arrayItem = false, arrayItemType: string = null,
   removable: boolean = null, forRefLibrary = false, dataPointerPrefix = ''
 ) {
-  const schema = JsonPointer.get(jsf.schema, schemaPointer);
+  var schema = JsonPointer.get(jsf.schema, schemaPointer);
   if (!hasOwn(schema, 'type') && !hasOwn(schema, '$ref') &&
     !hasOwn(schema, 'x-schema-form')
   ) { return null; }
@@ -523,6 +568,15 @@ export function buildLayoutFromSchema(
     type: newNodeType,
     widget: widgetLibrary.getWidget(newNodeType),
   };
+  if (isDefined(schema.condition)) {
+    newNode.options.condition = schema.condition;
+  }
+  if (isDefined(schema.options) && isDefined(schema.options.disabled)) {
+    newNode.options.disabled = !!schema.options.disabled;
+  }
+  if (isDefined(schema.options) && isDefined(schema.options.hidden)) {
+    newNode.options.hidden = !!schema.options.hidden;
+  }
   const lastDataKey = JsonPointer.toKey(newNode.dataPointer);
   if (lastDataKey !== '-') { newNode.name = lastDataKey; }
   if (newNode.arrayItem) {
@@ -534,15 +588,14 @@ export function buildLayoutFromSchema(
   );
   const recursive = !shortDataPointer.length ||
     shortDataPointer !== dataPointerPrefix + dataPointer;
-  if (!jsf.dataMap.has(shortDataPointer)) {
-    jsf.dataMap.set(shortDataPointer, new Map());
-  }
-  const nodeDataMap = jsf.dataMap.get(shortDataPointer);
+  var nodeDataMap = new Map();
+    jsf.dataMap.set(shortDataPointer, nodeDataMap);
   if (!nodeDataMap.has('inputType')) {
     nodeDataMap.set('schemaPointer', schemaPointer);
     nodeDataMap.set('inputType', newNode.type);
     nodeDataMap.set('widget', newNode.widget);
     nodeDataMap.set('disabled', !!newNode.options.disabled);
+    nodeDataMap.set('hidden', !!newNode.options.hidden);
   }
   updateInputOptions(newNode, schema, jsf);
   if (!newNode.options.title && newNode.name && !/^\d+$/.test(newNode.name)) {
@@ -553,8 +606,11 @@ export function buildLayoutFromSchema(
     if (isArray(schema.required) && !nodeDataMap.has('required')) {
       nodeDataMap.set('required', schema.required);
     }
+    if (isObject(schema.allOf)){
+      //do recurse?
+    }
+    const newSection: any[] = [];
     if (isObject(schema.properties)) {
-      const newSection: any[] = [];
       const propertyKeys = schema['ui:order'] || Object.keys(schema.properties);
       if (propertyKeys.includes('*') && !hasOwn(schema.properties, '*')) {
         const unnamedKeys = Object.keys(schema.properties)
@@ -591,6 +647,161 @@ export function buildLayoutFromSchema(
       } else {
         newNode.items = newSection;
       }
+    }
+
+    if (isObject(schema.if)){
+      var ifMap = JsonPointer.dict(schema.if);
+      var ifKeys = Object.keys(ifMap);
+      var ifTokens = JsonPointer.parse(ifKeys[0]);
+      var ifType = ifTokens.pop();
+      var ifPointer = JsonPointer.compile(ifTokens);
+
+      if (isObject(schema.then)) {
+        var thenMap = JsonPointer.dict(schema.then);
+        var thenKeys = Object.keys(thenMap);
+        var tokens = [];
+        thenKeys.forEach(element => {
+          var thenTokens = JsonPointer.parse(element);
+          var thenType = thenTokens.pop();
+          var pointer = JsonPointer.compile(thenTokens);
+          if (!tokens.includes(pointer)) {
+            tokens.push(pointer);
+          }
+        });
+
+        tokens.forEach(token => {
+          var conditionPath = "";
+          for (var i=1; i < ifTokens.length; i++)
+          {
+            conditionPath += "." + ifTokens[i] + "";
+          }
+
+          var tokens = JsonPointer.parse(token);
+          var prop = schema.then;
+          prop = prop[tokens[0]];
+          var finalPropName = "";
+          for (var i = 1 ; i < tokens.length; i++)
+          {
+            prop = prop[tokens[i]];
+            finalPropName = tokens[i];
+          }
+
+          if (finalPropName === "options") return;
+
+          if (!hasOwn(schema.properties, finalPropName)){
+            schema.properties[finalPropName] = Object.assign({}, prop);
+          }
+
+          if (ifType == 'const') {
+            prop.condition = function (data) {
+              var conditionValue = ifMap[ifKeys[0]];
+              var dataValue = data;
+              var dataTokens = JsonPointer.parse(dataPointer + "/" + ifTokens[ifTokens.length-1]);
+
+              for (var j=0; j<dataTokens.length; j++) {
+                var dataValue = dataValue[dataTokens[j]];
+              }
+
+              if (!isDefined(dataValue)) {
+                return false;
+              }
+              return conditionValue === dataValue;
+             }
+          }
+
+          const keySchemaPointer = hasOwn(schema.then.properties, finalPropName) ?
+          '/then/properties/' + finalPropName : '/additionalProperties';
+
+          const innerItem = buildLayoutFromSchema(
+            jsf, widgetLibrary, isObject(nodeValue) ? nodeValue[finalPropName] : null,
+            schemaPointer + keySchemaPointer,
+            dataPointer + '/' + finalPropName,
+            false, null, null, forRefLibrary, dataPointerPrefix
+          );
+          if (innerItem) {
+            if (isInputRequired(prop, '/' + finalPropName)) {
+              innerItem.options.required = true;
+              jsf.fieldsRequired = true;
+            }
+            newSection.push(innerItem);
+          }
+        });
+
+      }
+      if (isObject(schema.else)) {
+        var elseMap = JsonPointer.dict(schema.else);
+        var elseKeys = Object.keys(elseMap);
+        var elseTokens = JsonPointer.parse(elseKeys[0]);
+
+        var tokens = [];
+        elseKeys.forEach(element => {
+          var elseTokens = JsonPointer.parse(element);
+          var elseType = elseTokens.pop();
+          var pointer = JsonPointer.compile(elseTokens);
+          if (!tokens.includes(pointer)) {
+            tokens.push(pointer);
+          }
+        });
+
+        tokens.forEach(token => {
+          var conditionPath = "";
+          for (var i=1; i < ifTokens.length; i++)
+          {
+            conditionPath += "." + ifTokens[i] + "";
+          }
+          var tokens = JsonPointer.parse(token);
+          var prop = schema.else;
+          prop = prop[tokens[0]];
+          var finalPropName = "";
+          for (var i = 1 ; i < tokens.length; i++)
+          {
+            prop = prop[tokens[i]]
+            finalPropName = tokens[i];
+          }
+
+          if (finalPropName === "options") return;
+
+          if (!hasOwn(schema.properties, finalPropName)){
+            schema.properties[finalPropName] = Object.assign({}, prop);
+          }
+
+          if (ifType == 'const') {
+            prop.condition = function (data) {
+              var conditionValue = ifMap[ifKeys[0]];
+              var dataValue = data;
+              var dataTokens = JsonPointer.parse(dataPointer + "/" + ifTokens[ifTokens.length-1]);
+
+              for (var j=0; j<dataTokens.length; j++) {
+                var dataValue = dataValue[dataTokens[j]];
+              }
+
+              if (!isDefined(dataValue)) {
+                return false;
+              }
+              return conditionValue !== dataValue;
+             }
+          }
+
+          const keySchemaPointer = hasOwn(schema.else.properties, finalPropName) ?
+          '/else/properties/' + finalPropName : '/additionalProperties';
+
+          const innerItem = buildLayoutFromSchema(
+            jsf, widgetLibrary, isObject(nodeValue) ? nodeValue[finalPropName] : null,
+            schemaPointer + keySchemaPointer,
+            dataPointer + '/' + finalPropName,
+            false, null, null, forRefLibrary, dataPointerPrefix
+          );
+          if (innerItem) {
+            if (isInputRequired(prop, '/' + finalPropName)) {
+              innerItem.options.required = true;
+              jsf.fieldsRequired = true;
+            }
+            newSection.push(innerItem);
+          }
+        })
+      }
+        //schema = mergeDeep(schema, ...schema.else);
+
     }
     // TODO: Add patternProperties and additionalProperties inputs?
     // ... possibly provide a way to enter both key names and values?
