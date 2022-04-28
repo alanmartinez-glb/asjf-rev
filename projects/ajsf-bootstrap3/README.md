@@ -18,7 +18,7 @@ Then import `Bootstrap3FrameworkModule` in your main application module if you w
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
 
-import { Bootstrap3FrameworkModule } from '@ajsf/bootstrap3';
+import { Bootstrap3FrameworkModule } from 'ajsf-12-rev/bootstrap3';
 
 import { AppComponent } from './app.component';
 

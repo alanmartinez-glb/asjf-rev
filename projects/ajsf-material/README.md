@@ -18,7 +18,7 @@ Then import `MaterialDesignFrameworkModule` in your main application module if y
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
 
-import { MaterialDesignFrameworkModule } from '@ajsf/material';
+import { MaterialDesignFrameworkModule } from 'ajsf-12-rev/material';
 
 import { AppComponent } from './app.component';
 

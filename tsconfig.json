@@ -28,10 +28,10 @@
       "lodash/*": [
         "node_modules/@types/lodash-es/*"
       ],
-      "@ajsf/core": [
+      "ajsf-12-rev/core": [
         "dist/@ajsf/core"
       ],
-      "@ajsf/core/*": [
+      "ajsf-12-rev/core/*": [
         "dist/@ajsf/core/*"
       ],
       "@ajsf/bootstrap3": [

@@ -4,7 +4,7 @@ import {
   JsonSchemaFormModule,
   JsonSchemaFormService,
   WidgetLibraryModule, WidgetLibraryService
-} from '@ajsf/core';
+} from 'ajsf-12-rev/core';
 import {NgModule} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';

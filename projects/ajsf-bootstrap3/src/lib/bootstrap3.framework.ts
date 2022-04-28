@@ -1,5 +1,5 @@
 import {Injectable} from '@angular/core';
-import {Framework} from '@ajsf/core';
+import {Framework} from 'ajsf-12-rev/core';
 import {Bootstrap3FrameworkComponent} from './bootstrap3-framework.component';
 
 // Bootstrap 3 Framework

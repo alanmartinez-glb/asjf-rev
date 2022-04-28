@@ -1,5 +1,5 @@
 import {Injectable} from '@angular/core';
-import {Framework} from '@ajsf/core';
+import {Framework} from 'ajsf-12-rev/core';
 import {Bootstrap4FrameworkComponent} from './bootstrap4-framework.component';
 
 // Bootstrap 4 Framework

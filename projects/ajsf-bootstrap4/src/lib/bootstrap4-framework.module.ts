@@ -7,7 +7,7 @@ import {
   FrameworkLibraryService,
   JsonSchemaFormModule,
   WidgetLibraryModule
-} from '@ajsf/core';
+} from 'ajsf-12-rev/core';
 import {Bootstrap4Framework} from './bootstrap4.framework';
 import {Bootstrap4FrameworkComponent} from './bootstrap4-framework.component';
 

@@ -1,7 +1,7 @@
 import {ChangeDetectorRef, Component, Input, OnChanges, OnInit} from '@angular/core';
 import cloneDeep from 'lodash/cloneDeep';
 import map from 'lodash/map';
-import {JsonSchemaFormService, addClasses, inArray} from '@ajsf/core';
+import {JsonSchemaFormService, addClasses, inArray} from 'ajsf-12-rev/core';
 
 /**
  * Bootstrap 3 framework for Angular JSON Schema Form.

@@ -18,7 +18,7 @@ Then import `Bootstrap4FrameworkModule` in your main application module if you w
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
 
-import { Bootstrap4FrameworkModule } from '@ajsf/bootstrap4';
+import { Bootstrap4FrameworkModule } from 'ajsf-12-rev/bootstrap4';
 
 import { AppComponent } from './app.component';
 
