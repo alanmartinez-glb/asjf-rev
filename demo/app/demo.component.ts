@@ -5,7 +5,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 
 import { Examples } from './example-schemas.model';
-import { JsonPointer } from '@ajsf/core';
+import { JsonPointer } from 'ajsf-12-rev/core';
 
 @Component({
   // tslint:disable-next-line:component-selector
